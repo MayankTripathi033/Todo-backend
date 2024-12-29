@@ -114,6 +114,20 @@ export const deleteTodo = async (req, res) => {
 
 export const updateTodo = async (req, res) => {
   try {
+    const auth = verifyToken(req.headers.authorization);
+    if (auth) {
+      return res.status(401).json({
+        success: false,
+        message: auth,
+      });
+    }
+    const { id, completed, Todo } = req.body;
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide id",
+      });
+    }
   } catch (error) {
     res.status(500).json({
       success: false,
