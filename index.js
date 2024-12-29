@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json()); //Converts JSON string to JSON object
 const port = process.env.PORT || 3001;
 
-app.use("/api", router);
+app.use("/", router);
 
 const startServer = async () => {
   await mongodbconnect();
