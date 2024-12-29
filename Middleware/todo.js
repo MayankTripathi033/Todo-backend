@@ -1,5 +1,5 @@
 import express from "express";
-import Todo from "../Models/Todomodel.js";
+import Todo from "../Models/todomodel.js";
 import { verifyToken } from "../utils/verifyToken.js";
 import login from "../Models/loginmodel.js";
 import { sendEmailTodo } from "../utils/todoEmail.js";
