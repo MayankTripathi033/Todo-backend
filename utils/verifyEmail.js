@@ -1,6 +1,11 @@
 import dotenv from "dotenv";
 import { Resend } from "resend";
 dotenv.config();
+import fetch, { Headers } from "node-fetch";
+
+// Assign these to global objects if needed
+globalThis.fetch = fetch;
+globalThis.Headers = Headers;
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
