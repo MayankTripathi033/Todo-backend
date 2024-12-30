@@ -8,6 +8,7 @@ import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import dotenv from "dotenv";
 import { verifyEmail } from "../utils/verifyEmail.js";
+import { client } from "../database.js";
 
 dotenv.config();
 
@@ -16,6 +17,22 @@ cloudinary.config({
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET,
 });
+
+const sendOtp = async (email, otp) => {
+  try {
+    console.log("OTP has been sent", otp, email);
+    const save = await client.hSet(`${email}`, {
+      otp: otp,
+    });
+    await client.expire(`${email}`, 300);
+    const getdata = await client.hGet(`${email}`, "otp");
+    await verifyEmail(email, otp);
+    return save;
+  } catch (error) {
+    console.error("Error during OTP verification", error);
+    return error;
+  }
+};
 
 export const login = async (req, res) => {
   try {
@@ -83,7 +100,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: { fileSize: 1024 * 1024 },
-}).array("file");
+}).array("avatar");
 
 export const register = async (req, res) => {
   try {
@@ -117,9 +134,10 @@ export const register = async (req, res) => {
           .status(401)
           .json({ success: false, message: "Invalid email format" });
       }
+      const otp = Math.floor(100000 + Math.random() * 900000);
 
-      await verifyEmail(email);
-
+      const otpuser = await sendOtp(email, otp);
+      console.log("OTP has been sent", otpuser);
       setTimeout(async () => {
         try {
           const cloudinaryResponse = await cloudinary.uploader.upload(
@@ -158,35 +176,12 @@ export const register = async (req, res) => {
           .status(404)
           .json({ success: false, message: "File not found" });
       }
-      return res
-        .status(200)
-        .json({ success: true, message: "File has been uploaded" });
+      return res.status(200).json({
+        success: true,
+        message:
+          "User has been registered and please verify the user as the otp will expired withing 10min",
+      });
     });
-    // const connection = getCollection("register");
-
-    // Ensure all required fields are provided
-
-    // Hash the password before saving
-    // const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Optional email validation regex (uncomment if needed)
-
-    // Create new user in the database
-
-    // const result = await connection.insertOne({
-    //   username,
-    //   email,
-    //   password: hashedPassword,
-    // });
-
-    // Save the user and check if it's successful
-
-    // console.log("User has been saved", result);
-
-    // Respond with success if user is saved
-    // return res
-    //   .status(201)
-    //   .json({ success: true, message: "User has been saved successfully" });
   } catch (error) {
     // Log error for debugging
     console.error("Error during user registration:", error);
@@ -235,6 +230,40 @@ export const Todo = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Todo function has been stopped" });
+  }
+};
+
+export const verifyOtp = async (req, res) => {
+  try {
+    const { otp, email } = req.body;
+    if (!otp && !email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please provide email" });
+    }
+    const userdata = await client.hGet(`${email}`, "otp");
+
+    console.log("userdata", userdata);
+    if (!userdata) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    if (userdata !== otp) {
+      return res
+        .status(401)
+        .json({ success: false, message: "OTP is incorrect" });
+    } else {
+      await Register.findOneAndUpdate({ email: email }, { isVerified: true });
+      await client.del(`${email}`);
+      return res
+        .status(200)
+        .json({ success: true, message: "OTP has been verified" });
+    }
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "OTP couldn't be sent", error: error });
   }
 };
 
