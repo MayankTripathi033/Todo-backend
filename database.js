@@ -1,22 +1,26 @@
 import dotenv from "dotenv";
-// import { MongoClient } from "mongodb";
 import mongoose from "mongoose";
+import { createClient } from "redis";
 
 dotenv.config();
+
+export const client = createClient({
+  username: "default",
+  password: process.env.REDIS_PASSWORD,
+  socket: {
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+  },
+});
+
+client.on("error", (err) => console.log("Redis Client Error", err));
 
 const uri = process.env.MONGO_URI;
 const options = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 50000,
-  // serverApi: {
-  //   version: "1",
-  //   strict: true,
-  //   depreciationErrors: true,
-  // },
 };
-
-let conn;
 
 export async function mongodbconnect() {
   // if (!conn) {
@@ -32,5 +36,3 @@ export async function mongodbconnect() {
   //   console.log("Using existing MongoDB connection.");
   // }
 }
-
-// export const getConnectedClient = () => conn;

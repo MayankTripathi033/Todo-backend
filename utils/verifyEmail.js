@@ -9,13 +9,13 @@ globalThis.Headers = Headers;
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export const verifyEmail = async (email) => {
+export const verifyEmail = async (email, otp) => {
   try {
     const { data, error } = await resend.emails.send({
       from: "admin@tripathimayank.online",
       to: email,
       subject: "Verify your email",
-      text: "Please verify your email by clicking on the link below",
+      text: "Please verify your email by entering the OTP: " + otp,
     });
 
     if (error) {
