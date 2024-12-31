@@ -9,6 +9,11 @@ const options = {
       version: "1.0.0",
       description: "A sample API documentation",
     },
+    servers: [
+      {
+        url: "http://localhost:3001/api", // Base URL for API
+      },
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
