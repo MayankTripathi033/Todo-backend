@@ -23,16 +23,12 @@ const options = {
 };
 
 export async function mongodbconnect() {
-  // if (!conn) {
   try {
     console.log("Connecting to MongoDB...");
-    conn = await mongoose.connect(uri, options);
+    await mongoose.connect(uri, options);
     console.log(`Connected to MongoDB at ${uri}`);
   } catch (error) {
     console.error("Failed to connect to MongoDB", error);
     throw new Error("Could not connect to MongoDB");
   }
-  // } else {
-  //   console.log("Using existing MongoDB connection.");
-  // }
 }
