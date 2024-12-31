@@ -287,3 +287,32 @@ export const getDocument = async (req, res) => {
       .json({ success: false, message: "Document not found" });
   }
 };
+
+export const sendOtptouser = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please provide email" });
+    }
+    const user = await Register.findOne({ email: email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const otpuser = await sendOtp(email, otp);
+    console.log("OTP has been sent", otpuser);
+    return res
+      .status(200)
+      .json({ success: true, message: "OTP has been sent" });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "OTP couldn't be sent",
+      error: error,
+    });
+  }
+};
