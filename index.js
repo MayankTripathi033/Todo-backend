@@ -3,10 +3,12 @@ import router from "./routes.js";
 import { client, mongodbconnect } from "./database.js";
 import { specs, swaggerUi } from "./swagger.js";
 import dotenv from "dotenv";
+import cors from "cors";
 dotenv.config();
 
 const app = express();
 app.use(express.json()); //Converts JSON string to JSON object
+app.use(cors());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 const port = process.env.PORT || 3001;
 

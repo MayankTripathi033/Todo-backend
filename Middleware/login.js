@@ -1,4 +1,3 @@
-import express from "express";
 import Login from "../Models/loginmodel.js";
 import Register from "../Models/registermodel.js";
 import bcrypt from "bcrypt";
