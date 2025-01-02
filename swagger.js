@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:3001/api", // Base URL for API
+        url: "https://api.mayanktripathi.online/api", // Base URL for API
       },
     ],
     components: {
