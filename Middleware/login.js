@@ -56,13 +56,9 @@ export const login = async (req, res) => {
         .status(401)
         .json({ success: false, message: "Password is incorrect" });
     }
-    const token = jsonwebtoken.sign(
-      { email: email, password: password },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1hr",
-      }
-    );
+    const token = jsonwebtoken.sign({ email: email }, process.env.JWT_SECRET, {
+      expiresIn: "1hr",
+    });
     let data = await Login.findOne({ email: email });
     if (!data) {
       data = new Login({
@@ -311,6 +307,69 @@ export const sendOtptouser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "OTP couldn't be sent",
+      error: error,
+    });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const { authorization } = req.headers;
+    if (!authorization) {
+      return res.status(401).json({
+        success: false,
+        message: "Please Provide Authorization in order to Submit",
+      });
+    }
+    let isExpiredToken = jsonwebtoken.verify(
+      authorization.split(" ")[1],
+      process.env.JWT_SECRET
+    ).exp;
+    if (isExpiredToken < Date.now().valueOf() / 1000) {
+      return res.status(401).json({
+        success: false,
+        message: "Token has been expired",
+      });
+    }
+    const user = await Register.find({});
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    return res
+      .status(200)
+      .json({ success: true, message: "User has been fetched", payload: user });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "User couldn't be fetched",
+      error: error,
+    });
+  }
+};
+
+export const getUser = async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!email) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please provide email" });
+    }
+    const user = await Register.findById(id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    return res
+      .status(200)
+      .json({ success: true, message: "User has been fetched", payload: user });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "User couldn't be fetched",
       error: error,
     });
   }

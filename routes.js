@@ -6,6 +6,8 @@ import {
   sendOtptouser,
   uploadDocument,
   verifyOtp,
+  getAllUsers,
+  getUser,
 } from "./Middleware/login.js";
 import {
   deleteTodo,
@@ -24,6 +26,8 @@ router.patch("/Todo", updateTodo);
 router.delete("/Todo", deleteTodo);
 router.post("/verifyotp", verifyOtp);
 router.post("/sendOtp", sendOtptouser);
+router.get("/getAllUser", getAllUsers);
+router.get("/getSingleUser", getUser);
 
 export default router;
 
@@ -730,6 +734,115 @@ export default router;
  *                 message:
  *                   type: string
  *                   example: OTP couldn't be sent
+ *                 error:
+ *                   type: string
+ *                   example: Internal error details
+ */
+
+/**
+ * @swagger
+ * /getAllUser:
+ *   get:
+ *     summary: get all user
+ *     description: get all user
+ *     tags:
+ *       - Authentication
+ *     responses:
+ *       200:
+ *         description: Get All user Successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: All user has been fetched
+ *       400:
+ *         description: Missing or invalid request parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Please provide correct id
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Internal error details
+ *                 error:
+ *                   type: string
+ *                   example: Internal error details
+ */
+
+/**
+ * @swagger
+ * /getAllUser:
+ *   get:
+ *     summary: get all user
+ *     description: get all user
+ *     tags:
+ *       - Authentication
+ *    requestParams:
+ *      - in: query
+ *       id: id
+ *     responses:
+ *       200:
+ *         description: Get Single user Successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Single user has been fetched
+ *       400:
+ *         description: Missing or invalid request parameters.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Please provide id
+ *       500:
+ *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Internal error details
  *                 error:
  *                   type: string
  *                   example: Internal error details
