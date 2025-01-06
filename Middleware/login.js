@@ -69,6 +69,7 @@ export const login = async (req, res) => {
         expiresIn: "1hr",
       }
     );
+    console.log("token", token);
     let data = await Login.findOne({ email: email });
     if (!data) {
       data = new Login({
