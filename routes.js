@@ -24,8 +24,8 @@ router.patch("/Todo", updateTodo);
 router.delete("/Todo", deleteTodo);
 router.post("/verifyotp", verifyOtp);
 router.post("/sendOtp", sendOtptouser);
-router.get("/getAllUser", getAllUsers);
-router.get("/getSingleUser", getUser);
+// router.get("/getAllUser", getAllUsers);
+// router.get("/getSingleUser", getUser);
 
 export default router;
 
