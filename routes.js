@@ -732,59 +732,6 @@ export default router;
  *     description: get all user
  *     tags:
  *       - Authentication
- *     responses:
- *       200:
- *         description: Get All user Successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: All user has been fetched
- *       400:
- *         description: Missing or invalid request parameters.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Please provide correct id
- *       500:
- *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Internal error details
- *                 error:
- *                   type: string
- *                   example: Internal error details
- */
-
-/**
- * @swagger
- * /getAllUser:
- *   get:
- *     summary: get all user
- *     description: get all user
- *     tags:
- *       - Authentication
  *    requestParams:
  *      - in: query
  *       id: id
