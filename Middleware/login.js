@@ -8,7 +8,13 @@ import fs from "fs";
 import dotenv from "dotenv";
 import { verifyEmail } from "../utils/verifyEmail.js";
 import { client } from "../database.js";
-
+import {
+  isAuthorized,
+  isUserExistByEmail,
+  isUserExistById,
+  isValidEmail,
+  setAvatarToCloudinary,
+} from "./validation.js";
 dotenv.config();
 
 cloudinary.config({
@@ -17,9 +23,9 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-const sendOtp = async (email, otp) => {
+const sendOtp = async (email) => {
   try {
-    console.log("OTP has been sent", otp, email);
+    const otp = Math.floor(100000 + Math.random() * 900000);
     const save = await client.hSet(`${email}`, {
       otp: otp,
     });
@@ -57,7 +63,7 @@ export const login = async (req, res) => {
         .json({ success: false, message: "Password is incorrect" });
     }
     const token = jsonwebtoken.sign(
-      { email: email, password: password },
+      { email: email, id: result._id },
       process.env.JWT_SECRET,
       {
         expiresIn: "1hr",
@@ -120,54 +126,27 @@ export const register = async (req, res) => {
             "All user details (username, email, password) are required to register",
         });
       }
-      const user = await Register.findOne({ email });
-      if (user) {
+      const userdata = await isUserExistByEmail(email);
+      if (userdata) {
         return res
           .status(409)
           .json({ success: false, message: "User already exists" });
       }
-      const regex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
-      const isValid = regex.test(email);
+      const isValid = isValidEmail(email);
       if (!isValid) {
         return res
           .status(401)
           .json({ success: false, message: "Invalid email format" });
       }
-      const otp = Math.floor(100000 + Math.random() * 900000);
-
-      const otpuser = await sendOtp(email, otp);
-      console.log("OTP has been sent", otpuser);
-      setTimeout(async () => {
-        try {
-          const cloudinaryResponse = await cloudinary.uploader.upload(
-            file[0].path,
-            {
-              folder: "uploads",
-              public_id: result._id,
-              resource_type: "image",
-            }
-          );
-
-          await Register.findOneAndUpdate(result._id, {
-            avatar: cloudinaryResponse.secure_url,
-          });
-
-          console.log("File has been uploaded", cloudinaryResponse);
-        } catch (error) {
-          console.error("Error during file upload", error);
-          return res
-            .status(500)
-            .json({ success: false, message: "File couldn't be uploaded" });
-        } finally {
-          fs.unlinkSync(file[0].path);
-        }
-      }, 5000);
-
+      await sendOtp(email);
+      if (file) {
+        await setAvatarToCloudinary(file);
+      }
       const result = new Register({
         username: username,
         email: email,
         password: password,
-        avatar: file[0].path,
+        avatar: file?.[0]?.path || "Avatar image not provided",
       });
       await result.save();
       if (!file) {
@@ -191,44 +170,6 @@ export const register = async (req, res) => {
       message: "User couldn't be saved",
       error: error.message || "An error occurred during registration",
     });
-  }
-};
-
-export const Todo = async (req, res) => {
-  try {
-    const { Task, Description } = req.body;
-    const { authorization } = req.headers;
-    if (!Task && !Description) {
-      return res.status(401).json({
-        success: false,
-        message: "Please Provide Task and Description in order to Submit",
-      });
-    }
-    if (!authorization) {
-      return res.status(401).json({
-        success: false,
-        message: "Please Provide Authorization in order to Submit",
-      });
-    }
-    console.log("Task and Description has been added", authorization);
-    let isExpiredToken = jsonwebtoken.verify(
-      authorization.split(" ")[1],
-      process.env.JWT_SECRET
-    ).exp;
-    if (isExpiredToken < Date.now().valueOf() / 1000) {
-      return res.status(401).json({
-        success: false,
-        message: "Token has been expired",
-      });
-    }
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Task and Description has been added" });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Todo function has been stopped" });
   }
 };
 

@@ -6,13 +6,13 @@ import {
   sendOtptouser,
   uploadDocument,
   verifyOtp,
-} from "./Middleware/login.js";
+} from "./middleware/login.js";
 import {
   deleteTodo,
   getTodo,
   postTodo,
   updateTodo,
-} from "./Middleware/todo.js";
+} from "./middleware/todo.js";
 const router = express.Router();
 
 router.post("/upload", uploadDocument);
@@ -250,10 +250,6 @@ export default router;
  *                 type: boolean
  *                 description: The completion status of the todo.
  *                 example: false
- *               user:
- *                 type: string
- *                 description: The ID of the user creating the todo.
- *                 example: "63a5d0c1e3b5a79e9c8f42a1"
  *     responses:
  *       200:
  *         description: Todo created successfully.
@@ -487,13 +483,6 @@ export default router;
  *       - Todo
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: user
- *         required: true
- *         schema:
- *           type: string
- *         description: The username to fetch todos for.
  *     responses:
  *       200:
  *         description: Todos retrieved successfully.

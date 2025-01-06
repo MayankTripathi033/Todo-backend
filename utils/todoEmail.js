@@ -14,9 +14,8 @@ export const sendEmailTodo = async (email, Todo) => {
     });
 
     if (error) {
-      return console.log(error);
+      return error;
     }
-    console.log({ data });
     return data;
   } catch (error) {
     return error;

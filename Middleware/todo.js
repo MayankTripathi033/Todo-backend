@@ -3,25 +3,24 @@ import Todo from "../Models/todomodel.js";
 import { verifyToken } from "../utils/verifyToken.js";
 import login from "../Models/loginmodel.js";
 import { sendEmailTodo } from "../utils/todoEmail.js";
+import Register from "../Models/registermodel.js";
 
 export const postTodo = async (req, res) => {
   try {
-    const { todo, completed, user } = req.body;
-    const auth = verifyToken(req.headers.authorization);
-    if (auth) {
+    const { todo, completed } = req.body;
+    const auth = await verifyToken(req.headers.authorization);
+    if (!auth) {
       return res.status(401).json({
         success: false,
-        message: auth,
+        message: "Token has been expired or not available",
       });
     }
-    const userdata = await login.findOne({ user: user });
-    console.log("userdata", userdata);
+    const userdata = await Register.findById(auth.id);
     if (!userdata) {
       return res
         .status(400)
         .json({ success: false, message: "User not found" });
     }
-
     if (!todo) {
       return res
         .status(400)
@@ -30,7 +29,7 @@ export const postTodo = async (req, res) => {
     const result = new Todo({
       todo: todo,
       completed: completed,
-      user: user,
+      user: userdata._id,
     });
     await sendEmailTodo(userdata.email, todo);
     await result.save();
@@ -49,28 +48,21 @@ export const postTodo = async (req, res) => {
 export const getTodo = async (req, res) => {
   try {
     const auth = verifyToken(req.headers.authorization);
-    if (auth) {
+    if (!auth) {
       return res.status(401).json({
         success: false,
-        message: auth,
+        message: "Token has been expired or not available",
       });
     }
-    const { user } = req.query;
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide user",
-      });
-    }
-    const result = await Todo.find({ user: user });
+    const result = await Todo.find({ user: auth.id });
     if (result.length == 0) {
       return res
-        .status(400)
-        .json({ success: false, message: "No Todos found" });
+        .status(404)
+        .json({ success: false, message: "No Todos found", payload: [] });
     }
     return res
       .status(200)
-      .json({ success: true, message: "All Todos", result });
+      .json({ success: true, message: "All Todos", payload: result });
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -83,10 +75,10 @@ export const getTodo = async (req, res) => {
 export const deleteTodo = async (req, res) => {
   try {
     const auth = verifyToken(req.headers.authorization);
-    if (auth) {
+    if (!auth) {
       return res.status(401).json({
         success: false,
-        message: auth,
+        message: "Token has been expired or not available",
       });
     }
     const { id } = req.query;
@@ -98,11 +90,15 @@ export const deleteTodo = async (req, res) => {
     }
     const result = await Todo.findByIdAndDelete(id);
     if (!result) {
-      return res.status(400).json({ success: false, message: "No Todo found" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No Todo found", payload: [] });
     }
-    return res
-      .status(200)
-      .json({ success: true, message: "Todo has been deleted" });
+    return res.status(200).json({
+      success: true,
+      message: "Todo has been deleted",
+      payload: result,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -115,19 +111,35 @@ export const deleteTodo = async (req, res) => {
 export const updateTodo = async (req, res) => {
   try {
     const auth = verifyToken(req.headers.authorization);
-    if (auth) {
+    if (!auth) {
       return res.status(401).json({
         success: false,
-        message: auth,
+        message: "Token has been expired or not available",
       });
     }
-    const { id, completed, Todo } = req.body;
+    const { id, completed, todo } = req.body;
     if (!id) {
       return res.status(400).json({
         success: false,
         message: "Please provide id",
       });
     }
+    const result = await Todo.findByIdAndUpdate(id, {
+      todo: todo,
+      completed: completed,
+    });
+    console.log("result", result);
+
+    if (!result) {
+      return res
+        .status(402)
+        .json({ success: false, message: "Todo does not get update" });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Todo has been updated",
+      payload: result,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,

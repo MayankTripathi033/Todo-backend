@@ -3,16 +3,19 @@ import jsonwebtoken from "jsonwebtoken";
 export const verifyToken = (authorization) => {
   try {
     if (!authorization) {
-      return "Please Provide Authorization in order to Submit";
+      return false;
     }
     let isExpiredToken = jsonwebtoken.verify(
       authorization.split(" ")[1],
       process.env.JWT_SECRET
-    ).exp;
-    if (isExpiredToken < Date.now().valueOf() / 1000) {
-      return "Toke has been expired";
+    );
+    if (isExpiredToken.exp < Date.now().valueOf() / 1000) {
+      return false;
+    } else {
+      return isExpiredToken;
     }
   } catch (error) {
-    return `Token couldn't be verified ${error}`;
+    console.log("verifyToken Error", error);
+    return error;
   }
 };
