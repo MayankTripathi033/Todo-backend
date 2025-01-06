@@ -6,13 +6,13 @@ import {
   sendOtptouser,
   uploadDocument,
   verifyOtp,
-} from "./middleware/login.js";
+} from "./Middleware/login.js";
 import {
   deleteTodo,
   getTodo,
   postTodo,
   updateTodo,
-} from "./middleware/todo.js";
+} from "./Middleware/todo.js";
 const router = express.Router();
 
 router.post("/upload", uploadDocument);
@@ -24,8 +24,6 @@ router.patch("/Todo", updateTodo);
 router.delete("/Todo", deleteTodo);
 router.post("/verifyotp", verifyOtp);
 router.post("/sendOtp", sendOtptouser);
-// router.get("/getAllUser", getAllUsers);
-// router.get("/getSingleUser", getUser);
 
 export default router;
 
