@@ -1,0 +1,10 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - echo Installing dependencies
+      - npm install
+artifacts:
+  files:
+    - "**/*" # Include all files
+  discard-paths: yes # Flatten the file structure for deployment
