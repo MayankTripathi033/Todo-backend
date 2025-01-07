@@ -8,13 +8,7 @@ import fs from "fs";
 import dotenv from "dotenv";
 import { verifyEmail } from "../utils/verifyEmail.js";
 import { client } from "../database.js";
-import {
-  isAuthorized,
-  isUserExistByEmail,
-  isUserExistById,
-  isValidEmail,
-  setAvatarToCloudinary,
-} from "./validation.js";
+
 dotenv.config();
 
 cloudinary.config({
@@ -23,9 +17,9 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-const sendOtp = async (email) => {
+const sendOtp = async (email, otp) => {
   try {
-    const otp = Math.floor(100000 + Math.random() * 900000);
+    console.log("OTP has been sent", otp, email);
     const save = await client.hSet(`${email}`, {
       otp: otp,
     });
@@ -42,56 +36,57 @@ const sendOtp = async (email) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email && !password) {
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both email and password to log in.",
+      });
+    }
+    const user = await Register.findOne({ email });
+    if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Please fill the username and password in order to login",
+        message: "User not found.",
       });
     }
-    const result = await Register.findOne({
-      email: email,
-    });
-    if (!result) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-    const resultPassword = await bcrypt.compare(password, result.password);
-    if (!resultPassword) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Password is incorrect" });
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Incorrect password.",
+      });
     }
     const token = jsonwebtoken.sign(
-      { email: email, id: result._id },
+      { email, userId: user._id },
       process.env.JWT_SECRET,
-      {
-        expiresIn: "1hr",
-      }
+      { expiresIn: "1h" }
     );
-    console.log("token", token);
-    let data = await Login.findOne({ email: email });
-    if (!data) {
-      data = new Login({
-        email: email,
-        user: result._id,
-        token: token,
+    let loginRecord = await Login.findOne({ email });
+    if (!loginRecord) {
+      loginRecord = new Login({
+        email,
+        user: user._id,
+        token,
       });
-      data.save();
-      return res
-        .status(200)
-        .json({ success: true, message: "User has been found", payload: data });
+      await loginRecord.save();
     } else {
-      await Login.findOneAndUpdate({ email: email }, { token: token });
-      return res
-        .status(200)
-        .json({ success: true, message: "User has been found", payload: data });
+      loginRecord.token = token;
+      await loginRecord.save();
     }
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully.",
+      payload: {
+        email: loginRecord.email,
+        token: loginRecord.token,
+      },
+    });
   } catch (error) {
+    console.error("Login error:", error);
     return res.status(500).json({
       success: false,
-      message: "Login Request didn't Complete",
-      error: error,
+      message: "Login request failed.",
+      error: error.message,
     });
   }
 };
@@ -127,27 +122,54 @@ export const register = async (req, res) => {
             "All user details (username, email, password) are required to register",
         });
       }
-      const userdata = await isUserExistByEmail(email);
-      if (userdata) {
+      const user = await Register.findOne({ email });
+      if (user) {
         return res
           .status(409)
           .json({ success: false, message: "User already exists" });
       }
-      const isValid = isValidEmail(email);
+      const regex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+      const isValid = regex.test(email);
       if (!isValid) {
         return res
           .status(401)
           .json({ success: false, message: "Invalid email format" });
       }
-      await sendOtp(email);
-      if (file) {
-        await setAvatarToCloudinary(file);
-      }
+      const otp = Math.floor(100000 + Math.random() * 900000);
+
+      const otpuser = await sendOtp(email, otp);
+      console.log("OTP has been sent", otpuser);
+      setTimeout(async () => {
+        try {
+          const cloudinaryResponse = await cloudinary.uploader.upload(
+            file[0].path,
+            {
+              folder: "uploads",
+              public_id: result._id,
+              resource_type: "image",
+            }
+          );
+
+          await Register.findOneAndUpdate(result._id, {
+            avatar: cloudinaryResponse.secure_url,
+          });
+
+          console.log("File has been uploaded", cloudinaryResponse);
+        } catch (error) {
+          console.error("Error during file upload", error);
+          return res
+            .status(500)
+            .json({ success: false, message: "File couldn't be uploaded" });
+        } finally {
+          fs.unlinkSync(file[0].path);
+        }
+      }, 5000);
+
       const result = new Register({
         username: username,
         email: email,
         password: password,
-        avatar: file?.[0]?.path || "Avatar image not provided",
+        avatar: file[0].path,
       });
       await result.save();
       if (!file) {

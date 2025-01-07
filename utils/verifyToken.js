@@ -5,17 +5,14 @@ export const verifyToken = (authorization) => {
     if (!authorization) {
       return false;
     }
-    let isExpiredToken = jsonwebtoken.verify(
-      authorization.split(" ")[1],
-      process.env.JWT_SECRET
-    );
-    if (isExpiredToken.exp < Date.now().valueOf() / 1000) {
+    const token = authorization.split(" ")[1];
+    if (!token) {
       return false;
-    } else {
-      return isExpiredToken;
     }
+    const decodedToken = jsonwebtoken.verify(token, process.env.JWT_SECRET);
+    return decodedToken;
   } catch (error) {
-    console.log("verifyToken Error", error);
-    return error;
+    console.error("Token verification failed:", error.message);
+    return false;
   }
 };

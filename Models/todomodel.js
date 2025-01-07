@@ -10,6 +10,12 @@ const todoSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    schedule: {
+      type: String,
+    },
+    scheduleMailId: {
+      type: String,
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Register",

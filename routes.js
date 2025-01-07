@@ -13,6 +13,7 @@ import {
   postTodo,
   updateTodo,
 } from "./Middleware/todo.js";
+import { getAllUsers } from "./Middleware/user.js";
 const router = express.Router();
 
 router.post("/upload", uploadDocument);
@@ -24,6 +25,7 @@ router.patch("/Todo", updateTodo);
 router.delete("/Todo", deleteTodo);
 router.post("/verifyotp", verifyOtp);
 router.post("/sendOtp", sendOtptouser);
+router.get("/getAllUsers", getAllUsers);
 
 export default router;
 

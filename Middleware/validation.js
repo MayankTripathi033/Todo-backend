@@ -97,10 +97,25 @@ const isAuthorized = (token) => {
   }
 };
 
+const getTransformedImageUrl = (avatarImg) => {
+  try {
+    const modifiedUrl = avatarImg.replace(
+      "/upload/", // Find the /upload/ part of the URL
+      "/upload/w_100,h_100,c_fill/" // Add transformations after /upload/
+    );
+    console.log("modifiedUrl", modifiedUrl);
+    return modifiedUrl;
+  } catch (error) {
+    console.error("Error fetching or transforming the URL:", error);
+    throw error;
+  }
+};
+
 export {
   setAvatarToCloudinary,
   isUserExistByEmail,
   isUserExistById,
   isValidEmail,
   isAuthorized,
+  getTransformedImageUrl,
 };

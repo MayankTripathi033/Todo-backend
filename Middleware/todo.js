@@ -3,19 +3,21 @@ import Todo from "../Models/todomodel.js";
 import { verifyToken } from "../utils/verifyToken.js";
 import login from "../Models/loginmodel.js";
 import { sendEmailTodo } from "../utils/todoEmail.js";
+import { sendCustomEmailTodo } from "../utils/sendEmail.js";
+import { getTransformedImageUrl } from "./validation.js";
 import Register from "../Models/registermodel.js";
 
 export const postTodo = async (req, res) => {
   try {
-    const { todo, completed } = req.body;
-    const auth = await verifyToken(req.headers.authorization);
+    const { todo, completed, schedule } = req.body;
+    const auth = verifyToken(req.headers.authorization);
     if (!auth) {
       return res.status(401).json({
         success: false,
         message: "Token has been expired or not available",
       });
     }
-    const userdata = await Register.findById(auth.id);
+    const userdata = await Register.findById(auth.userId);
     if (!userdata) {
       return res
         .status(400)
@@ -26,12 +28,24 @@ export const postTodo = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Please fill the todo" });
     }
+    const avatar = getTransformedImageUrl(userdata.avatar);
+    const mailMessage = {
+      headline: "New Todo Posted!",
+      description:
+        "We wanted to let you know that you have successfully posted a new Todo today:",
+      message: todo,
+      scheduledAt: schedule || "",
+      avatar: avatar,
+    };
+    const data = await sendEmailTodo(userdata.email, mailMessage);
     const result = new Todo({
       todo: todo,
       completed: completed,
+      schedule: schedule,
       user: userdata._id,
+      scheduleMailId: data.id,
     });
-    await sendEmailTodo(userdata.email, todo);
+
     await result.save();
     return res
       .status(200)
@@ -117,28 +131,44 @@ export const updateTodo = async (req, res) => {
         message: "Token has been expired or not available",
       });
     }
-    const { id, completed, todo } = req.body;
+    const { id, completed, schedule, todo } = req.body;
     if (!id) {
       return res.status(400).json({
         success: false,
         message: "Please provide id",
       });
     }
-    const result = await Todo.findByIdAndUpdate(id, {
+    const userdata = await Register.findById(auth.userId);
+    const avatar = getTransformedImageUrl(userdata.avatar);
+    const todoMessage = {
+      headline: "Your Todo has been updated",
+      description: "You have successfully updated your Todo",
+      message: `Your Todo has been updated to ${todo}`,
+      scheduledAt: schedule || "",
+      avatar: avatar,
+    };
+    const data = await sendCustomEmailTodo(
+      auth.email,
+      todoMessage.description,
+      todoMessage
+    );
+    const updatedResult = {
       todo: todo,
       completed: completed,
-    });
-    console.log("result", result);
-
+      schedule: schedule,
+      scheduleMailId: data.id,
+    };
+    const result = await Todo.findByIdAndUpdate(id, updatedResult);
     if (!result) {
       return res
-        .status(402)
+        .status(401)
         .json({ success: false, message: "Todo does not get update" });
     }
+
     return res.status(200).json({
       success: true,
       message: "Todo has been updated",
-      payload: result,
+      payload: updatedResult,
     });
   } catch (error) {
     res.status(500).json({
