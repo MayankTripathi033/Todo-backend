@@ -75,7 +75,7 @@ export const login = async (req, res) => {
     }
     return res.status(200).json({
       success: true,
-      message: "User logged in successfully nad",
+      message: "User logged in successfully",
       payload: {
         email: loginRecord.email,
         token: loginRecord.token,
