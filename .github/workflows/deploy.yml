@@ -29,12 +29,17 @@ jobs:
           unzip -o awscliv2.zip
           sudo ./aws/install --update
 
-      # Step 4: Deploy to CodeDeploy
+      # Step 4: Get the latest commit ID
+      - name: Get latest commit ID
+        id: get_commit
+        run: echo "::set-output name=commit_id::$(git rev-parse HEAD)"
+
+      # Step 5: Deploy to CodeDeploy
       - name: Deploy to CodeDeploy
         run: |
           aws deploy create-deployment \
             --application-name Todo-Backend \
             --deployment-group-name Todo-backend-Group \
-            --revision '{"revisionType":"GitHub","gitHubLocation":{"repository":"MayankTripathi033/Todo-backend","commitId":"8f4d5f63e808aa9127ef4ae44d90f7f88af49d84"}}' \
+            --revision '{"revisionType":"GitHub","gitHubLocation":{"repository":"MayankTripathi033/Todo-backend","commitId":"${{ steps.get_commit.outputs.commit_id }}"}}' \
             --description "Deployment from GitHub Actions" \
             --query "deploymentId"
