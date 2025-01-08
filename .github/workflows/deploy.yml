@@ -25,10 +25,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y awscli
 
-      - name: Deploy using GitHub as revision source
+      - name: Deploy to CodeDeploy
         run: |
           aws deploy create-deployment \
             --application-name Todo-Backend \
             --deployment-group-name Todo-Backend-Group \
-            --github-location repository=MayankTripathi033/Todo-backend,commitId=${{ github.sha }} \
+            --revision "revisionType=GitHub,githubLocation={repository=MayankTripathi033/Todo-backend,commitId=${{ github.sha }}}" \
             --description "Deployment from GitHub Actions"
