@@ -17,7 +17,7 @@ app.use(cors(corsOptions));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 const port = process.env.PORT || 3001;
 
-app.use("/api", router);
+app.use("/api", router); //App Router
 
 const startServer = async () => {
   await client.connect();
