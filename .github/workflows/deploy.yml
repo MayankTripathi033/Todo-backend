@@ -10,9 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Set up AWS credentials
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -20,12 +22,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      # Step 3: Install AWS CLI
       - name: Install AWS CLI
         run: |
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
           unzip -o awscliv2.zip
           sudo ./aws/install --update
 
+      # Step 4: Deploy to CodeDeploy
       - name: Deploy to CodeDeploy
         run: |
           aws deploy create-deployment \
@@ -34,4 +38,3 @@ jobs:
             --revision revisionType=GitHub,gitHubLocation={repository=MayankTripathi033/Todo-backend,commitId=144423667abd3c2b765052787eb001d57f5eb37c} \
             --description "Deployment from GitHub Actions" \
             --query "deploymentId"
-
