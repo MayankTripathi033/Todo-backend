@@ -4,6 +4,9 @@ files:
   - source: /
     destination: /home/ec2-user/Todo-backend
 hooks:
+  BeforeInstall:
+    - location: scripts/cleanup.sh
+      runas: ec2-user
   AfterInstall:
     - location: scripts/install_dependencies.sh
       timeout: 300
