@@ -36,6 +36,6 @@ jobs:
             --application-name Todo-Backend \
             --deployment-group-name Todo-Backend-Group \
             --revision revisionType=GitHub \
-              gitHubLocation='{"repository":"MayankTripathi033/Todo-backend", "commitId":"144423667abd3c2b765052787eb001d57f5eb37c"}' 
+              gitHubLocation='{"repository":"MayankTripathi033/Todo-backend"}' 
             --description "Deployment from GitHub Actions" \
             --query "deploymentId"
