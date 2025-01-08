@@ -31,7 +31,7 @@ jobs:
           aws deploy create-deployment \
             --application-name Todo-Backend \
             --deployment-group-name Todo-Backend-Group \
-            --revision revisionType=GitHub,gitHubLocation={repository=MayankTripathi033/Todo-backend,commitId=fc48d7e2b686013a88320f650da3b0387bd9ca03} \
+            --revision revisionType=GitHub,gitHubLocation={repository=MayankTripathi033/Todo-backend,commitId=144423667abd3c2b765052787eb001d57f5eb37c} \
             --description "Deployment from GitHub Actions" \
             --query "deploymentId"
 
