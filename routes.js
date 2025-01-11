@@ -4,6 +4,7 @@ import {
   login,
   register,
   sendOtptouser,
+  uploadAvatar,
   uploadDocument,
   verifyOtp,
 } from "./Middleware/login.js";
@@ -26,6 +27,7 @@ router.delete("/Todo", deleteTodo);
 router.post("/verifyotp", verifyOtp);
 router.post("/sendOtp", sendOtptouser);
 router.get("/getAllUsers", getAllUsers);
+router.post("/updateAvatar", uploadAvatar);
 
 export default router;
 
@@ -724,4 +726,96 @@ export default router;
  *                 error:
  *                   type: string
  *                   example: Internal error details
+ */
+
+/**
+ * @swagger
+ * /upload-avatar:
+ *   post:
+ *     summary: Upload a user avatar
+ *     description: Allows an authenticated user to upload an avatar image.
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The avatar file to upload.
+ *     responses:
+ *       200:
+ *         description: Avatar uploaded successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Avatar has been uploaded"
+ *       400:
+ *         description: Bad request due to missing or invalid fields.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Uploaded Avatar is not correct"
+ *       401:
+ *         description: Unauthorized access due to invalid or expired token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Token has been expired or not available"
+ *       404:
+ *         description: Missing authorization token.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Please Authorize"
+ *       500:
+ *         description: Internal server error during avatar upload.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Uploaded Avatar is not working"
+ *                 error:
+ *                   type: string
+ *                   example: "Error message here"
  */

@@ -342,3 +342,50 @@ export const getUser = async (req, res) => {
     });
   }
 };
+
+export const uploadAvatar = async (req, res) => {
+  try {
+    const { authorization } = req.headers;
+    if (!authorization) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Please Auhtorize" });
+    }
+    const auth = verifyToken(authorization);
+    if (!auth) {
+      return res.status(401).json({
+        success: false,
+        message: "Token has been expired or not available",
+      });
+    }
+    upload(req, res, async (err) => {
+      if (err) {
+        return res.status(401).json({
+          success: false,
+          message: "Uploaded Avatar is not correct",
+        });
+      }
+      const file = req.files;
+      const cloudinaryResponse = await cloudinary.uploader.upload(
+        file[0].path,
+        {
+          folder: "uploads",
+          public_id: result._id,
+          resource_type: "image",
+        }
+      );
+      await Register.findOneAndUpdate(
+        { email: auth?.email },
+        {
+          avatar: cloudinaryResponse?.secure_url,
+        }
+      );
+      console.log("File has been uploaded", cloudinaryResponse);
+      return res
+        .status(200)
+        .json({ success: true, message: "Avatar has been uploaded" });
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Uploaded Avatar is not working" });
+  }
+};
