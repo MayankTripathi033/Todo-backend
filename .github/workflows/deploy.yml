@@ -3,32 +3,43 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - main  # Trigger on push to the main branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Set up AWS credentials
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ap-south-1
 
+      # Step 3: Install AWS CLI
       - name: Install AWS CLI
         run: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -o awscliv2.zip
+          sudo ./aws/install --update
 
-      - name: Deploy using GitHub as revision source
+      # Step 4: Get the latest commit ID
+      - name: Get latest commit ID
+        id: get_commit
+        run: echo "::set-output name=commit_id::$(git rev-parse HEAD)"
+
+      # Step 5: Deploy to CodeDeploy
+      - name: Deploy to CodeDeploy
         run: |
           aws deploy create-deployment \
             --application-name Todo-Backend \
-            --deployment-group-name Todo-Backend-Group \
-            --github-location repository=MayankTripathi033/Todo-backend,commitId=${{ github.sha }} \
-            --description "Deployment from GitHub Actions"
+            --deployment-group-name Todo-backend-Group \
+            --revision '{"revisionType":"GitHub","gitHubLocation":{"repository":"MayankTripathi033/Todo-backend","commitId":"${{ steps.get_commit.outputs.commit_id }}"}}' \
+            --description "Deployment from GitHub Actions" \
+            --query "deploymentId"
