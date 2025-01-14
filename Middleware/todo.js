@@ -6,6 +6,7 @@ import { sendEmailTodo } from "../utils/todoEmail.js";
 import { sendCustomEmailTodo } from "../utils/sendEmail.js";
 import { getTransformedImageUrl } from "./validation.js";
 import Register from "../Models/registermodel.js";
+import JobFeed from "../Models/jobRequistions.js";
 
 export const postTodo = async (req, res) => {
   try {
@@ -175,6 +176,92 @@ export const updateTodo = async (req, res) => {
       success: false,
       message: "Todo couldn't be updated",
       error: error,
+    });
+  }
+};
+
+export const getJobFeeds = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      city,
+      state,
+      providerJobID,
+      sourceID,
+      degree,
+      facility,
+      groupByField, // Add dynamic grouping field
+    } = req.query;
+
+    // Create filter based on query parameters
+    const filter = {
+      $and: [
+        state ? { state: { $regex: state, $options: "i" } } : {},
+        city ? { city: { $regex: city, $options: "i" } } : {},
+        providerJobID
+          ? { providerJobID: { $regex: providerJobID, $options: "i" } }
+          : {},
+        sourceID ? { sourceID: { $regex: sourceID, $options: "i" } } : {},
+        degree ? { degree: { $regex: degree, $options: "i" } } : {},
+        facility ? { facility: { $regex: facility, $options: "i" } } : {},
+      ],
+    };
+
+    // Build aggregation pipeline
+    const pipeline = [
+      { $match: filter }, // Apply filtering
+      ...(groupByField
+        ? [
+            {
+              $group: {
+                _id: `$${groupByField}`, // Group by the dynamic field
+                jobs: { $push: "$$ROOT" }, // Add all job details in an array
+                count: { $sum: 1 }, // Count the number of jobs in each group
+              },
+            },
+            { $sort: { count: -1 } }, // Sort groups by count
+          ]
+        : []),
+      { $skip: (page - 1) * limit }, // Pagination
+      { $limit: Number(limit) },
+    ];
+
+    // Execute aggregation
+    const results = await JobFeed.aggregate(pipeline);
+
+    // Count total documents for pagination
+    const totalPipeline = [
+      { $match: filter },
+      ...(groupByField
+        ? [
+            {
+              $group: {
+                _id: `$${groupByField}`,
+                count: { $sum: 1 },
+              },
+            },
+          ]
+        : []),
+    ];
+    const totalGroups = await JobFeed.aggregate(totalPipeline);
+
+    return res.status(200).json({
+      success: true,
+      message: "Jobs are available",
+      payload: results,
+      pagination: {
+        total: totalGroups.length, // Total number of groups or documents
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalGroups.length / limit),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Jobs cannot be shown",
+      error: error.message,
     });
   }
 };

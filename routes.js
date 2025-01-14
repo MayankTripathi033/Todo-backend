@@ -10,6 +10,7 @@ import {
 } from "./Middleware/login.js";
 import {
   deleteTodo,
+  getJobFeeds,
   getTodo,
   postTodo,
   updateTodo,
@@ -28,6 +29,7 @@ router.post("/verifyotp", verifyOtp);
 router.post("/sendOtp", sendOtptouser);
 router.get("/getAllUsers", getAllUsers);
 router.post("/updateAvatar", uploadAvatar);
+router.get("/getJobs", getJobFeeds);
 
 export default router;
 
