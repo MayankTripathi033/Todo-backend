@@ -8,7 +8,9 @@ import fs from "fs";
 import dotenv from "dotenv";
 import { verifyEmail } from "../utils/verifyEmail.js";
 import { client } from "../database.js";
-
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 dotenv.config();
 
 cloudinary.config({
@@ -19,7 +21,6 @@ cloudinary.config({
 
 const sendOtp = async (email, otp) => {
   try {
-    console.log("OTP has been sent", otp, email);
     const save = await client.hSet(`${email}`, {
       otp: otp,
     });
@@ -103,6 +104,10 @@ const upload = multer({
   limits: { fileSize: 1024 * 1024 },
 }).array("avatar");
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const defaultAvatar = path.join(__dirname, "../public/avatar.jpeg");
+
 export const register = async (req, res) => {
   try {
     upload(req, res, async (err) => {
@@ -142,7 +147,7 @@ export const register = async (req, res) => {
       setTimeout(async () => {
         try {
           const cloudinaryResponse = await cloudinary.uploader.upload(
-            file[0].path,
+            file[0]?.path || defaultAvatar,
             {
               folder: "uploads",
               public_id: result._id,
@@ -161,7 +166,9 @@ export const register = async (req, res) => {
             .status(500)
             .json({ success: false, message: "File couldn't be uploaded" });
         } finally {
-          fs.unlinkSync(file[0].path);
+          if (file && file[0]?.path) {
+            fs.unlinkSync(file[0]?.path);
+          }
         }
       }, 5000);
 
@@ -169,7 +176,7 @@ export const register = async (req, res) => {
         username: username,
         email: email,
         password: password,
-        avatar: file[0].path,
+        avatar: file[0]?.path || defaultAvatar,
       });
       await result.save();
       if (!file) {
@@ -206,11 +213,10 @@ export const verifyOtp = async (req, res) => {
     }
     const userdata = await client.hGet(`${email}`, "otp");
 
-    console.log("userdata", userdata);
     if (!userdata) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "Otp has been expired.." });
     }
     if (userdata !== otp) {
       return res
@@ -367,7 +373,7 @@ export const uploadAvatar = async (req, res) => {
       }
       const file = req.files;
       const cloudinaryResponse = await cloudinary.uploader.upload(
-        file[0].path,
+        file[0]?.path || defaultAvatar,
         {
           folder: "uploads",
           public_id: result._id,

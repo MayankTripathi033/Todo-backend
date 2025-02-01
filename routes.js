@@ -10,13 +10,21 @@ import {
 } from "./Middleware/login.js";
 import {
   deleteTodo,
-  getJobFeeds,
   getTodo,
   postTodo,
   updateTodo,
 } from "./Middleware/todo.js";
 import { getAllUsers } from "./Middleware/user.js";
+import { rateLimit } from "express-rate-limit";
 const router = express.Router();
+
+const limiter = rateLimit({
+  window: 1 * 60 * 1000,
+  limit: 100,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: "Please wait for a moment in order to proceed..",
+});
 
 router.post("/upload", uploadDocument);
 router.post("/login", login);
@@ -25,11 +33,10 @@ router.post("/Todo", postTodo);
 router.get("/Todo", getTodo);
 router.patch("/Todo", updateTodo);
 router.delete("/Todo", deleteTodo);
-router.post("/verifyotp", verifyOtp);
+router.post("/verifyotp", limiter, verifyOtp);
 router.post("/sendOtp", sendOtptouser);
 router.get("/getAllUsers", getAllUsers);
 router.post("/updateAvatar", uploadAvatar);
-router.get("/getJobs", getJobFeeds);
 
 export default router;
 
